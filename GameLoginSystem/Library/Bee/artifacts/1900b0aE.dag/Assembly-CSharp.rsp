@@ -385,6 +385,17 @@
 "Assets/Photon/PhotonChat/Demos/DemoChat/IgnoreUiRaycastWhenInactive.cs"
 "Assets/Photon/PhotonChat/Demos/DemoChat/NamePickGui.cs"
 "Assets/Photon/PhotonRealtime/Demos/DemoLoadBalancing/ConnectAndJoinRandomLb.cs"
+"Assets/scripts/CreateAccountPanel.cs"
+"Assets/scripts/LoginPanel.cs"
+"Assets/scripts/MainSceneManager.cs"
+"Assets/scripts/OAuth/AppleSignInButton.cs"
+"Assets/scripts/OAuth/GoogleSignInButton.cs"
+"Assets/scripts/OAuth/KakaoSignInButton.cs"
+"Assets/scripts/OAuth/NaverSignInButton.cs"
+"Assets/scripts/OAuth/XSignInButton.cs"
+"Assets/scripts/SignUpPanel.cs"
+"Assets/scripts/StartGamePanel.cs"
+"Assets/scripts/UIManager.cs"
 -langversion:9.0
 /deterministic
 /optimize+
