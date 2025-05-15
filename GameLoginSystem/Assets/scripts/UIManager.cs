@@ -1,137 +1,118 @@
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using System.Collections;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
-    // 모든 패널 참조
+    public static UIManager Instance;
+
+    [Header("패널 참조")]
     public GameObject loginPanel;
     public GameObject signUpPanel;
-    public GameObject createIDPanel;
-    public GameObject gameStartPanel;
+    public GameObject createAccountPanel;
+    public GameObject startGamePanel;
     public GameObject findIDPanel;
     public GameObject findPasswordPanel;
+    public GameObject roleSelectionPanel;
 
-    // 메시지 출력용 Text (패널 공통)
-    public Text messageText;
+    [Header("메시지 출력 텍스트 (패널별 하단 위치)")]
+    public Text loginMessageText;
+    public Text signUpMessageText;
+    public Text createAccountMessageText;
+    public Text startGameMessageText;
 
-    // 자동 로그인 여부 토글
-    public Toggle autoLoginToggle;
-
-    // 로그인한 ID 저장
-    private string loggedInID = "";
-
-    void Start()
+    private void Awake()
     {
-        InitializePanels();
-
-        // 자동 로그인 처리
-        if (PlayerPrefs.GetInt("AutoLogin", 0) == 1 && PlayerPrefs.HasKey("LoginID"))
+        // 싱글턴 패턴
+        if (Instance == null)
         {
-            loggedInID = PlayerPrefs.GetString("LoginID");
-            ShowGameStartPanel();
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // 씬 전환 시 유지
         }
         else
         {
-            ShowLoginPanel();
+            Destroy(gameObject);
         }
     }
 
-    void InitializePanels()
+    private void Start()
     {
-        loginPanel.SetActive(false);
-        signUpPanel.SetActive(false);
-        createIDPanel.SetActive(false);
-        gameStartPanel.SetActive(false);
-        findIDPanel.SetActive(false);
-        findPasswordPanel.SetActive(false);
-    }
-
-    public void ShowLoginPanel()
-    {
-        InitializePanels();
-        loginPanel.SetActive(true);
-    }
-
-    public void ShowSignUpPanel()
-    {
-        InitializePanels();
-        signUpPanel.SetActive(true);
-    }
-
-    public void ShowCreateIDPanel()
-    {
-        InitializePanels();
-        createIDPanel.SetActive(true);
-    }
-
-    public void ShowGameStartPanel()
-    {
-        InitializePanels();
-        gameStartPanel.SetActive(true);
-        if (!string.IsNullOrEmpty(loggedInID))
-            ShowMessage($"환영합니다, {loggedInID}님!");
-    }
-
-    public void ShowFindIDPanel()
-    {
-        InitializePanels();
-        findIDPanel.SetActive(true);
-    }
-
-    public void ShowFindPasswordPanel()
-    {
-        InitializePanels();
-        findPasswordPanel.SetActive(true);
-    }
-
-    public void OnLoginSuccess(string loginID)
-    {
-        loggedInID = loginID;
-
-        // 자동 로그인 저장
-        if (autoLoginToggle != null && autoLoginToggle.isOn)
+        // 자동 로그인 여부 확인 후 처리
+        if (PlayerPrefs.GetInt("AutoLogin", 0) == 1)
         {
-            PlayerPrefs.SetInt("AutoLogin", 1);
-            PlayerPrefs.SetString("LoginID", loggedInID);
+            // 자동 로그인된 사용자라면 StartGamePanel 열기
+            OpenStartGamePanel();
         }
         else
         {
-            PlayerPrefs.SetInt("AutoLogin", 0);
-            PlayerPrefs.DeleteKey("LoginID");
+            OpenLoginPanel();
         }
-
-        ShowGameStartPanel();
     }
 
-    public void OnLogout()
+    // 모든 패널 비활성화
+    public void CloseAllPanels()
     {
-        PlayerPrefs.SetInt("AutoLogin", 0);
-        PlayerPrefs.DeleteKey("LoginID");
-        loggedInID = "";
-        ShowLoginPanel();
+        loginPanel?.SetActive(false);
+        signUpPanel?.SetActive(false);
+        createAccountPanel?.SetActive(false);
+        startGamePanel?.SetActive(false);
+        findIDPanel?.SetActive(false);
+        findPasswordPanel?.SetActive(false);
+        roleSelectionPanel?.SetActive(false);
     }
 
-    public void OnClickGameStart()
+    // 특정 패널 열기
+    public void OpenPanel(GameObject panel)
     {
-        SceneManager.LoadScene("MainScene");
+        CloseAllPanels();
+        if (panel != null) panel.SetActive(true);
     }
 
-    public void ShowMessage(string msg)
-    {
-        if (messageText == null) return;
+    // 패널별 헬퍼 메서드
+    public void OpenLoginPanel() => OpenPanel(loginPanel);
+    public void OpenSignUpPanel() => OpenPanel(signUpPanel);
+    public void OpenCreateAccountPanel() => OpenPanel(createAccountPanel);
+    public void OpenStartGamePanel() => OpenPanel(startGamePanel);
+    public void OpenFindIDPanel() => OpenPanel(findIDPanel);
+    public void OpenFindPasswordPanel() => OpenPanel(findPasswordPanel);
+    public void OpenRoleSelectionPanel() => OpenPanel(roleSelectionPanel);
 
-        messageText.text = msg;
-        messageText.gameObject.SetActive(true);
-        StopAllCoroutines();
-        StartCoroutine(HideMessageAfterSeconds(10f));
+    // 메시지 출력 공통 함수 (10초 후 사라짐)
+    public void ShowMessage(Text targetText, string message)
+    {
+        if (targetText == null) return;
+
+        StopAllCoroutines(); // 기존 메시지 출력 중단
+        targetText.text = message;
+        targetText.gameObject.SetActive(true);
+        StartCoroutine(HideMessageAfterDelay(targetText, 10f));
     }
 
-    IEnumerator HideMessageAfterSeconds(float seconds)
+    private IEnumerator HideMessageAfterDelay(Text targetText, float delay)
     {
-        yield return new WaitForSeconds(seconds);
-        messageText.text = "";
-        messageText.gameObject.SetActive(false);
+        yield return new WaitForSeconds(delay);
+        targetText.text = "";
+        targetText.gameObject.SetActive(false);
+    }
+
+    // 자동 로그인 저장
+    public void SetAutoLogin(bool isEnabled)
+    {
+        PlayerPrefs.SetInt("AutoLogin", isEnabled ? 1 : 0);
+        PlayerPrefs.Save();
+    }
+
+    // 자동 로그인 해제 및 로그인 패널로 전환
+    public void Logout()
+    {
+        SetAutoLogin(false);
+        OpenLoginPanel();
+    }
+
+    // 메인 씬 전환
+    public void StartGame()
+    {
+        SceneManager.LoadScene("MainScene"); // MainScene으로 씬 전환
     }
 }
